@@ -74,13 +74,16 @@ def main():
             else:
                 print('Failed Output: ' + out_path)
                 
-        elif os.path.isdir(read_file_path):
-            for sub_dir_file in os.listdir(read_file_path):
-                out_path = make_output(sub_dir_file)
+        elif os.path.isdir(read_file_path):  
+            read_dir = read_file_path
 
-                if append_br_tag(sub_dir_file, out_path):
-                    print('Succeed Output: ' + out_path)
+            for sub_dir_file in os.listdir(read_dir):
+                read_path = os.path.join(read_dir, sub_dir_file)
+                out_path = make_output(read_path)
+
+                if append_br_tag(read_path, out_path):
+                    print('Succeed Output: ' + sub_dir_file)
                 else:
-                    print('Failed Output: ' + out_path)
+                    print('Failed Output: ' + sub_dir_file)
 
 main()
