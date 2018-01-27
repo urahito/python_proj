@@ -2,6 +2,14 @@ import os, sys
 import pandas as pd
 
 def main():
+    '''
+    処理内容: 体脂肪率, 体重から計算した値を新たなcsvファイルに追加する
+
+    コマンドライン引数
+    引数0: このスクリプトのパス
+    引数1: 読み込むcsvファイル => 'Body Fat Percentage (%)', 'Weight (kg)'が含まれるもの
+    引数2: 身長(cm)
+    '''
     argv = sys.argv
 
     # 引数の条件設定
@@ -31,7 +39,6 @@ def main():
     data['BMI'] = data['体重'] / (height ** 2)
     data['除脂肪体重'] = data['体重'] * (1 - data['体脂肪率'])
     data['基礎代謝'] = 370 + (21.6 * data['除脂肪体重'])
-    print(data)
         
     data.to_csv(os.path.join(file_dir, 'HealthData_stat.csv'))
     
