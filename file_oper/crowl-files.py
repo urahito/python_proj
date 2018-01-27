@@ -1,6 +1,7 @@
 import os
 import csv
 import datetime
+import tqdm
 
 # MB掛け算
 def mul_mega(value):
@@ -57,7 +58,7 @@ def main():
     output_writer.writerow(['filename', 'extention', 'Media', 'size(MB)', 'dirpath', 'fullpath'])
 
     # フォルダの走査
-    for foldername, subfolders, filenames in os.walk('C:\\'):
+    for foldername, subfolders, filenames in tqdm.tqdm(os.walk('C:\\')):
         sum_size = 0
 
         if is_exclude_path(foldername):
