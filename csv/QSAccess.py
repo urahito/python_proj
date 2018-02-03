@@ -43,7 +43,7 @@ def main():
     data = data.dropna()
 
     # BMI、除脂肪体重、基礎代謝(Katch-McArdle式:除脂肪体重から算出する式)を求める
-    data['BMI'] = data['体重'] / (height ** 2)
+    data['BMI'] = data['体重'] / pow(height, 2)
     data['除脂肪体重'] = data['体重'] * (1 - data['体脂肪率'])
     data['基礎代謝'] = 370 + (21.6 * data['除脂肪体重'])
         
