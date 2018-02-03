@@ -5,7 +5,7 @@ import tqdm
 
 # MB掛け算
 def mul_mega(value):
-    return value * (1024 ** 2)
+    return value * pow(1024, 2)
 
 # MB割り算
 def div_mega(value):
@@ -13,15 +13,7 @@ def div_mega(value):
 
 # MB表示用（引数がB単位）
 def str_div_mega(value):
-    return replace_str(str(div_mega(value)))
-
-#replaceメソッド
-def replace_str(target_str):
-    # 出力時にエンコードエラーとなる文字列を随時追記
-    replace_list = ['\xe9']
-    for rep_str in replace_list:
-        target_str = target_str.replace(rep_str, '')
-    return target_str
+    return str(div_mega(value))
 
 # 操作できないフォルダを指定
 def is_exclude_path(path):
@@ -51,7 +43,7 @@ def main():
     now_str = now_time.strftime('%Y%m%d%H%M%S')
 
     # 結果出力ファイルの設定(csv)
-    output_file = open('result' + now_str + '.csv', 'w', newline='')
+    output_file = open('result' + now_str + '.csv', 'w', newline='', encoding='utf-8')
     output_writer = csv.writer(output_file)
 
     # ヘッダの設定
@@ -82,9 +74,8 @@ def main():
                     # ファイルサイズが100MB以上の場合、かつ拡張子がある場合
                     if file_size >= big_size and len(ext) > 0:
                         # csvファイルに書き出す
-                        output_writer.writerow([replace_str(filename), replace_str(ext), \
-                                                get_special_path(full_path), str_div_mega(file_size), \
-                                                replace_str(foldername), replace_str(full_path)])
+                        output_writer.writerow([filename, ext, get_special_path(full_path), 
+                                                str_div_mega(file_size), foldername, full_path])
             except FileNotFoundError:
                 print('FILE ERROR: ' + filename)
             except EnvironmentError:
@@ -92,9 +83,8 @@ def main():
 
         # フォルダサイズの出力
         if sum_size >= big_size:
-            output_writer.writerow([replace_str(foldername), 'dir', \
-                                    get_special_path(full_path), str_div_mega(sum_size), \
-                                    replace_str(foldername), replace_str(foldername)])
+            output_writer.writerow([foldername, 'dir', get_special_path(full_path), 
+                                    str_div_mega(sum_size), foldername, foldername])
     # 結果ファイルを閉じて保存する
     output_file.close()
 
