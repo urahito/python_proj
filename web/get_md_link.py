@@ -2,6 +2,7 @@
 
 import csv # ファイル出力用
 import bs4, requests # スクレイピング(html取得・処理)
+import re #正規表現
 from pathlib import Path
 
 # インラインのfor文リストで除外文字以外を繋ぐ
@@ -17,6 +18,15 @@ def read_url(url_list, out_writer):
         # urlリストを1行ごとに処理する
         for url in url_list:
             url = remove_str(url, ['\r', '\n'])
+
+            # 正規表現処理
+            rep = r'^(http|https)://[\w/:%#\$&\?\(\)~\.=\+\-]+$'
+            isUrl = re.match(rep, url) != None
+
+            # urlでなければ次へ
+            if not isUrl:
+                print('{} do not matched url pattern'.format(url))
+                continue
 
             # ページの取得
             res = requests.get(url)
