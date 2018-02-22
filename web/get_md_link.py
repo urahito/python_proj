@@ -1,15 +1,18 @@
 # coding: utf-8
 
-import sys, bs4, requests, csv, os, codecs
-import unicodedata
+import csv # ファイル出力用
+import bs4, requests # スクレイピング(html取得・処理)
 from pathlib import Path
 
-def remove_str(target, str_list):
+# インラインのfor文リストで除外文字以外を繋ぐ
+def remove_str(target, str_list):    
     return ''.join([c for c in target if c not in str_list])
 
-def ignore_str(target, enc):
+# 指定エンコードでエラー文字以外を再取得する
+def ignore_str(target, enc):    
     return target.encode(enc, 'ignore').decode(enc)
 
+# urlからタイトルを取得し、csvファイルに出力する
 def read_url(url_list, out_writer):
         # urlリストを1行ごとに処理する
         for url in url_list:
@@ -35,11 +38,14 @@ def main():
     # フォルダが無ければ作成（あってもエラーなし）
     org_dir.mkdir(exist_ok=True)
     out_dir.mkdir(exist_ok=True)
+
+    # 出力ファイルの決定
     out_file = out_dir / 'result.csv'
 
     # 入力、出力ファイル・ディレクトリの取得
     files = list(org_dir.glob('*.txt'))
     with out_file.open('w', encoding='utf-8', newline='') as out_file_obj:
+        # csvファイルのwriterを取得
         out_writer = csv.writer(out_file_obj, dialect="excel")
 
         # 入力ファイルでfor文を回す
@@ -48,6 +54,7 @@ def main():
                 # 全行取り込む
                 url_list = file_obj.readlines()
 
+                # urlの読み込み
                 read_url(url_list, out_writer)
 
 if __name__ == '__main__':
