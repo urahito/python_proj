@@ -5,6 +5,15 @@ import bs4, requests # スクレイピング(html取得・処理)
 import re #正規表現
 from pathlib import Path
 
+# 指定エンコードのgetメソッド
+def get_enc(mode):
+    if mode == 'r':
+        return 'utf-8'
+    elif mode == 'w':
+        return 'sjis'
+    else:
+        return 'cp932'
+
 # インラインのfor文リストで除外文字以外を繋ぐ
 def remove_str(target, str_list):    
     return ''.join([c for c in target if c not in str_list])
@@ -33,7 +42,7 @@ def read_url(url_list, out_writer):
             soup = bs4.BeautifulSoup(res.text)
 
             # タイトルの取得とMarkdown用フォーマット
-            title = ignore_str(soup.title.string, 'sjis')
+            title = ignore_str(soup.title.string, get_enc('w'))
             markup = '[{}]({})'.format(title, url)
 
             # csvファイルへ書き出し
@@ -54,13 +63,13 @@ def main():
 
     # 入力、出力ファイル・ディレクトリの取得
     files = list(org_dir.glob('*.txt'))
-    with out_file.open('w', encoding='utf-8', newline='') as out_file_obj:
+    with out_file.open('w', encoding=get_enc('w'), newline='') as out_file_obj:
         # csvファイルのwriterを取得
         out_writer = csv.writer(out_file_obj, dialect="excel")
 
         # 入力ファイルでfor文を回す
         for file_path in files:
-            with Path(file_path).open('r', encoding='utf-8') as file_obj:
+            with Path(file_path).open('r', encoding=get_enc('r')) as file_obj:
                 # 全行取り込む
                 url_list = file_obj.readlines()
 
