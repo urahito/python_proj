@@ -7,12 +7,8 @@ from pathlib import Path
 
 # 指定エンコードのgetメソッド
 def get_enc(mode):
-    if mode == 'r':
-        return 'utf-8'
-    elif mode == 'w':
-        return 'sjis'
-    else:
-        return 'cp932'
+    enc_dic = dict(r='utf-8', w='sjis', p='cp932')
+    return enc_dic[mode]
 
 # インラインのfor文リストで除外文字以外を繋ぐ
 def remove_str(target, str_list):    
@@ -29,7 +25,7 @@ def read_url(url_list, out_writer):
             url = remove_str(url, ['\r', '\n'])
 
             # 正規表現処理
-            rep = r'^(http|https)://[\w/:%#\$&\?\(\)~\.=\+\-]+$'
+            rep = r'^https?://[\w/:%#\$&\?\(\)~\.=\+\-]+$'
             isUrl = re.match(rep, url) != None
 
             # urlでなければ次へ
@@ -69,9 +65,9 @@ def main():
 
         # 入力ファイルでfor文を回す
         for file_path in files:
-            with Path(file_path).open('r', encoding=get_enc('r')) as file_obj:
+            with Path(file_path).open('r', encoding=get_enc('r')) as read_file_obj:
                 # 全行取り込む
-                url_list = file_obj.readlines()
+                url_list = read_file_obj.readlines()
 
                 # urlの読み込み
                 read_url(url_list, out_writer)
