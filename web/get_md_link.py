@@ -17,6 +17,12 @@ def remove_str(target, str_list):
 # 指定エンコードでエラー文字以外を再取得する
 def ignore_str(target, enc):    
     return target.encode(enc, 'ignore').decode(enc)
+    
+# ページをパースする
+def get_soup(url):
+    res = requests.get(url)
+    soup = bs4.BeautifulSoup(res.text)
+    return soup
 
 # urlからタイトルを取得し、csvファイルに出力する
 def read_url(url_list, out_writer):
@@ -34,8 +40,7 @@ def read_url(url_list, out_writer):
                 continue
 
             # ページの取得
-            res = requests.get(url)
-            soup = bs4.BeautifulSoup(res.text)
+            soup = get_soup(url)
 
             # タイトルの取得とMarkdown用フォーマット
             title = ignore_str(soup.title.string, get_enc('w'))
