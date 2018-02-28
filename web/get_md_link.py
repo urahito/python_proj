@@ -17,7 +17,7 @@ def remove_str(target, str_list):
 # 指定エンコードでエラー文字以外を再取得する
 def ignore_str(target, enc):    
     return target.encode(enc, 'ignore').decode(enc)
-    
+
 # ページをパースする
 def get_soup(url):
     res = requests.get(url)
@@ -49,6 +49,17 @@ def read_url(url_list, out_writer):
             # csvファイルへ書き出し
             out_writer.writerow([url, title, markup])
 
+# ファイルの読み込み
+def read_for(files, out_writer):    
+    # 入力ファイルでfor文を回す
+    for file_path in files:
+        with Path(file_path).open('r', encoding=get_enc('r')) as read_file_obj:
+            # 全行取り込む
+            url_list = read_file_obj.readlines()
+
+            # urlの読み込み
+            read_url(url_list, out_writer)
+
 def main():
     # 各ディレクトリの取得
     parent_dir = Path(__file__).parent
@@ -68,14 +79,7 @@ def main():
         # csvファイルのwriterを取得
         out_writer = csv.writer(out_file_obj, dialect="excel")
 
-        # 入力ファイルでfor文を回す
-        for file_path in files:
-            with Path(file_path).open('r', encoding=get_enc('r')) as read_file_obj:
-                # 全行取り込む
-                url_list = read_file_obj.readlines()
-
-                # urlの読み込み
-                read_url(url_list, out_writer)
+        read_for(files, out_writer)
 
 if __name__ == '__main__':
     main()
