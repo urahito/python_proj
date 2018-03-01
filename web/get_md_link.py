@@ -24,18 +24,30 @@ def get_soup(url):
     soup = bs4.BeautifulSoup(res.text)
     return soup
 
+# parent,subのフォルダ作成
+def get_new_dir(parent_dir, sub_dir):
+    # フォルダが無ければ作成（あってもエラーなし）
+    parent_dir.mkdir(exist_ok=True)
+    sub_dir_path = parent_dir / sub_dir
+    sub_dir_path.mkdir(exist_ok=True)
+    return Path(sub_dir_path)
+
+# URLか判定する
+def ask_is_url(url):
+    url = remove_str(url, ['\r', '\n'])
+
+    # 正規表現処理
+    rep = r'^https?://[\w/:%#\$&\?\(\)~\.=\+\-]+$'
+    return re.match(rep, url) != None
+    
+# titleとformatを
+
 # urlからタイトルを取得し、csvファイルに出力する
 def read_url(url_list, out_writer):
         # urlリストを1行ごとに処理する
         for url in url_list:
-            url = remove_str(url, ['\r', '\n'])
-
-            # 正規表現処理
-            rep = r'^https?://[\w/:%#\$&\?\(\)~\.=\+\-]+$'
-            isUrl = re.match(rep, url) != None
-
             # urlでなければ次へ
-            if not isUrl:
+            if not ask_is_url(url):
                 print('{} do not matched url pattern'.format(url))
                 continue
 
@@ -62,13 +74,8 @@ def read_for(files, out_writer):
 
 def main():
     # 各ディレクトリの取得
-    parent_dir = Path(__file__).parent
-    org_dir = parent_dir / 'org'
-    out_dir = parent_dir / 'out'
-
-    # フォルダが無ければ作成（あってもエラーなし）
-    org_dir.mkdir(exist_ok=True)
-    out_dir.mkdir(exist_ok=True)
+    org_dir = get_new_dir(Path(__file__).parent, 'org')
+    out_dir = get_new_dir(Path(__file__).parent, 'out')
 
     # 出力ファイルの決定
     out_file = out_dir / 'result.csv'
@@ -79,7 +86,9 @@ def main():
         # csvファイルのwriterを取得
         out_writer = csv.writer(out_file_obj, dialect="excel")
 
+        # ファイルの読み込み
         read_for(files, out_writer)
 
 if __name__ == '__main__':
     main()
+    print('finish')
