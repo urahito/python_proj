@@ -50,7 +50,7 @@ def move_to_temp_dir(files, target_dir):
 # 古いファイルを特定する(1年以上前なら500MBまで)
 def get_old_pictures(files):
     size_sum = 0
-    size_max = 500 * (1024 ** 2)
+    size_max = file_attr.get_big_size(500, 'MB')
     for fi in files:
         size_sum = fi.allow_file_copy(size_sum, size_max)
         print(fi)
