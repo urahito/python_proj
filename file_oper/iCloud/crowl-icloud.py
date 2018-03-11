@@ -57,10 +57,10 @@ def move_to_temp_dir(files, target_dir):
 def get_old_pictures(files):
     size_sum = 0
     size_max = file_attr.get_big_size(500, 'MB')
-    found_ng = False
+    past_ng = False
 
     for fi in tqdm.tqdm(files):
-        size_sum, found_ng = fi.allow_file_copy(size_sum, size_max, 90, found_ng)
+        size_sum, past_ng = fi.allow_file_copy(size_sum, size_max, 90, past_ng)
 
 # ファイルパターンを指定して、入力フォルダからのファイルを絞り込む
 def append_to_list(flist, input_dir, pattern_list):

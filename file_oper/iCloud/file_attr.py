@@ -42,9 +42,9 @@ class file_attr:
     # 有効なファイルかどうか
     def is_file(self):
         # 存在するファイルであること
-        result = (self.org_path.exists() and self.org_path.is_file()) == False
+        result = self.org_path.exists() and self.org_path.is_file()
         # ファイルサイズがあること
-        result = result and (self.file_size <= 0)
+        result = result and (self.file_size > 0)
         return result
     
     # 対象の日付か
@@ -66,10 +66,10 @@ class file_attr:
         3. 90日前までに作成されていること
         4. ファイルサイズの累計が上限値を超えないこと
         '''        
-        result = past_ng == True                        
-        result = result and (self.is_file() == False)   
-        result = result and (self.is_target_day(days_before) == False)  
-        result = result and is_over_size                
+        result = past_ng == False                        
+        result = result and self.is_file()   
+        result = result and self.is_target_day(days_before)
+        result = result and is_over_size == False                
 
         if result == False:
             return ng_result
