@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 from pathlib import Path
+import time
 
 class file_attr:    
     def __init__(self, fpath, ctime, fsize, dest_dir):
@@ -14,7 +15,7 @@ class file_attr:
         return "[{}]({}),{},{},[{}]({})" \
             .format(org_name, \
                     self.org_path, \
-                    self.create_time, \
+                    time.localtime(self.create_time), \
                     self.file_size, \
                     self.dest_path.parent, \
                     self.dest_path)
