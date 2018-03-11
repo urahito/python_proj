@@ -1,9 +1,12 @@
 # -- coding: utf-8 --
+# 操作系
 import configparser
 from operator import attrgetter
-import sys, os
-import time
 from pathlib import Path
+# 基本ライブラリ
+import sys, os
+import datetime
+# 外部クラス
 sys.path.append(os.getcwd())
 from file_attr import file_attr
 
@@ -44,9 +47,13 @@ def comp_to_zip(target_dir):
 def move_to_temp_dir(files, target_dir):
     print('')
 
-# 古いファイルを特定する(1年以上前なら1GBまで)
-def get_old_pictures(target_dir):
-    print('')
+# 古いファイルを特定する(1年以上前なら500MBまで)
+def get_old_pictures(files):
+    size_sum = 0
+    size_max = 500 * (1024 ** 2)
+    for fi in files:
+        size_sum = fi.allow_file_copy(size_sum, size_max)
+        print(fi)
 
 def main():
     # iniファイルの準備
@@ -57,10 +64,12 @@ def main():
     input_dir = Path(ini_data['settings']['input'])
     output_dir = Path(ini_data['settings']['output'])
     print(input_dir)
-    files = get_files(input_dir, output_dir)
 
-    for fi in files:
-        print(fi)
+    # ファイルリストの取得
+    files = get_files(input_dir, output_dir)
+    
+    # ファイルの仕分け
+    get_old_pictures(files)
     
     # 特定したファイルを一時フォルダへ
 
