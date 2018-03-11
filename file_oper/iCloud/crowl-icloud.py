@@ -1,6 +1,8 @@
 import configparser
 import sys, os
+import time
 from pathlib import Path
+import file_attr
 
 # iniファイルから色々読み込む
 def get_ini_data(path_obj):
@@ -14,15 +16,15 @@ def get_ini_data(path_obj):
 def get_files(input_dir):
     files = {}
     for gif_file in list(input_dir.glob('*.gif')):
-        files[gif_file] = os.path.getsize(gif_file)
+        files[gif_file] = time.localtime(os.path.getmtime(gif_file))
 
     for png_file in list(input_dir.glob('*.PNG')):
-        files[png_file] = os.path.getsize(png_file)
+        files[png_file] = time.localtime(os.path.getmtime(png_file))
     
     print(str(len(files)) + '(flies)')
-    print(str(sum(files.values()) / (1024 ** 2)) + '(MB)')
+    print(min(files.values()))
 
-    return files
+    return sorted(files, key=lambda time: files.values())
 
 # zipファイルをDドライブの専用フォルダへ移動する
 def move_zip(zip_file, dest_dir):
@@ -48,7 +50,7 @@ def main():
     # 古いファイルを特定する(1年以上前なら1GBまで)
     input_dir = Path(ini_data['settings']['input'])
     print(input_dir)
-    files = get_files(input_dir)    
+    files = get_files(input_dir)
     
     # 特定したファイルを一時フォルダへ
 
