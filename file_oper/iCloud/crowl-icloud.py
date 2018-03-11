@@ -33,11 +33,20 @@ def output_csv_log(files, input_dir, output_dir):
             csv_obj.writerow(fi.output_line())
 
 # zipファイルをDドライブの専用フォルダへ移動する
-def move_zip(zip_file, dest_dir):
+def move_zip(zip_path, dest_dir):
     print('')
 
 # 一時フォルダをzip化する
-def comp_to_zip(target_dir):
+def comp_to_zip(target_dir, dest_path):
+    print('')
+
+# GIFアニメーションを作成する
+def make_gif_animation(target_dir, dest_path):
+    print('')
+
+# GIFのコピーを作る（GIFアニメーション用）
+def get_gif_copy(files):
+    # GIF用の一時フォルダも必要
     print('')
 
 # 特定したファイルを一時フォルダへ
@@ -51,7 +60,7 @@ def get_old_pictures(files):
     found_ng = False
 
     for fi in tqdm.tqdm(files):
-        size_sum, found_ng = fi.allow_file_copy(size_sum, size_max, found_ng)
+        size_sum, found_ng = fi.allow_file_copy(size_sum, size_max, 90, found_ng)
 
 # ファイルパターンを指定して、入力フォルダからのファイルを絞り込む
 def append_to_list(flist, input_dir, pattern_list):
@@ -100,6 +109,10 @@ def main():
     try:
         print('')
         # 特定したファイルを一時フォルダへ
+
+        # GIFのコピーを作る（GIFアニメーション用）
+
+        # GIFアニメーションを作成する
 
         # 一時フォルダをzip化する
 

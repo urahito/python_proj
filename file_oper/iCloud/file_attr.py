@@ -39,25 +39,43 @@ class file_attr:
         self.dest_path = self.dest_org / org_path.name
         self.allow_copy = False
     
-    def allow_file_copy(self, sum_size, size_max, past_ng):
-        # 既にNGが出ていないこと
-        if past_ng == True:
-            return sum_size, True
+    # 有効なファイルかどうか
+    def is_file(self):
         # 存在するファイルであること
-        if (self.org_path.exists() and self.org_path.is_file()) == False:
-            return sum_size, True
+        result = (self.org_path.exists() and self.org_path.is_file()) == False
         # ファイルサイズがあること
-        elif self.file_size <= 0:
-            return sum_size, True
-        # 90日前までに作成されたファイルであること
-        elif self.create_time >= datetime.datetime.today() - datetime.timedelta(days=90):
-            return sum_size, True
-        # ファイルサイズの累計が上限値を超えないこと
-        elif sum_size + self.file_size > size_max:
-            return sum_size, True
+        result = result and (self.file_size <= 0)
+        return result
+    
+    # 対象の日付か
+    def is_target_day(self, days_before):
+        today = datetime.datetime.today()
+        th_date = today - datetime.timedelta(days=days_before)
+        return self.create_time < th_date
+    
+    # 対象ファイルチェック
+    def allow_file_copy(self, sum_size, size_max, days_before, past_ng):
+        ng_result = (sum_size, True)
+        ok_result = ((sum_size + self.file_size), False)
+        is_over_size = sum_size + self.file_size > size_max
+
+        '''
+        【チェック内容】
+        1. 既にNGが出ていないこと
+        2. 有効なファイルか
+        3. 90日前までに作成されていること
+        4. ファイルサイズの累計が上限値を超えないこと
+        '''        
+        result = past_ng == True                        
+        result = result and (self.is_file() == False)   
+        result = result and (self.is_target_day(days_before) == False)  
+        result = result and is_over_size                
+
+        if result == False:
+            return ng_result
         
         self.allow_copy =  True
-        return (sum_size + self.file_size), False
+        return ok_result
     
     def set_sub_dir(self, sub_dir):
         self.dest_path = self.dest_org / sub_dir / self.org_path.name
