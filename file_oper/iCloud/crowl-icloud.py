@@ -28,9 +28,7 @@ def get_files(input_dir, output_dir):
     file_list = append_to_list(file_list, input_dir, ['*.gif', '*.PNG'])
 
     for file_path in file_list:
-        ftime = os.path.getmtime(file_path)
-        fsize = os.path.getsize(file_path)
-        files.append(file_attr(file_path, ftime, fsize, output_dir))
+        files.append(file_attr(file_path, output_dir))
 
     return sorted(files, key=attrgetter("create_time"))
 
