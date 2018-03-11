@@ -50,7 +50,7 @@ def get_old_pictures(files):
     size_max = file_attr.get_big_size(500, 'MB')
     found_ng = False
 
-    for fi in files:
+    for fi in tqdm.tqdm(files):
         size_sum, found_ng = fi.allow_file_copy(size_sum, size_max, found_ng)
 
 # ファイルパターンを指定して、入力フォルダからのファイルを絞り込む
