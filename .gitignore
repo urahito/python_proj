@@ -102,3 +102,4 @@ ENV/
 /*.code-workspace
 out
 org
+/file_oper/iCloud/*.ini
