@@ -16,19 +16,21 @@ def get_ini_data(path_obj):
 
     return ini_file
 
+def append_to_list(flist, input_dir, pattern_list):
+    for pattern in pattern_list:
+        for path in list(input_dir.glob(pattern)):
+            flist.append(path)
+    return flist
+
 def get_files(input_dir, output_dir):
     files = []
-    for gif_file in list(input_dir.glob('*.gif')):
-        ftime = os.path.getmtime(gif_file)
-        fsize = os.path.getsize(gif_file)
-        files.append(file_attr(gif_file, ftime, fsize, output_dir))
+    file_list = []
+    file_list = append_to_list(file_list, input_dir, ['*.gif', '*.PNG'])
 
-    for png_file in list(input_dir.glob('*.PNG')):
-        ftime = os.path.getmtime(png_file)
-        fsize = os.path.getsize(png_file)
-        files.append(file_attr(png_file, ftime, fsize, output_dir))
-    
-    print(str(len(files)) + '(flies)')
+    for file_path in file_list:
+        ftime = os.path.getmtime(file_path)
+        fsize = os.path.getsize(file_path)
+        files.append(file_attr(file_path, ftime, fsize, output_dir))
 
     return sorted(files, key=attrgetter("create_time"))
 

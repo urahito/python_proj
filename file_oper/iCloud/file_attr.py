@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 from pathlib import Path
-import time
+import datetime
 
 class file_attr:    
     def __init__(self, fpath, ctime, fsize, dest_dir):
@@ -10,12 +10,17 @@ class file_attr:
         self.file_size = fsize
         self.dest_path = Path(dest_dir) / org_path.name
 
+    def get_file_info(self):
+        print('')
+
     def __str__(self):
-        org_name = self.org_path.name        
+        org_name = self.org_path.name     
+        create_str = datetime.datetime.fromtimestamp(self.create_time).strftime('%Y/%m/%d %H:%M:%S') 
+
         return "[{}]({}),{},{},[{}]({})" \
             .format(org_name, \
                     self.org_path, \
-                    time.localtime(self.create_time), \
+                    create_str, \
                     self.file_size, \
                     self.dest_path.parent, \
                     self.dest_path)
