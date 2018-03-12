@@ -24,7 +24,16 @@ class file_attr:
     def ignore_str(target, enc):    
         return target.encode(enc, 'ignore').decode(enc)  
     
-    def __init__(self, fpath, dest_dir):
+    # 外部用datetimeのstr取得メソッド
+    @staticmethod
+    def get_datetime_str(value, format):
+        return value.strftime(format)
+
+    # datetimeのstr取得メソッド
+    def get_createtime_str(self):
+        return self.get_datetime_str(self.create_time, '%Y/%m/%d %H:%M:%S')
+    
+    def __init__(self, fpath, dest_dir, size_limit):
         org_path = Path(fpath)
         if (org_path.exists() == False):
             return
@@ -38,6 +47,7 @@ class file_attr:
         self.dest_org = Path(dest_dir)
         self.dest_path = self.dest_org / org_path.name
         self.allow_copy = False
+        self.size_limit = size_limit
     
     # 有効なファイルかどうか
     def is_file(self):
@@ -53,25 +63,28 @@ class file_attr:
         th_date = today - datetime.timedelta(days=days_before)
         return self.create_time < th_date
     
+    # ファイルサイズの上限チェック
+    def is_over_size(self, sum_size):
+        return sum_size + self.file_size > self.size_limit
+    
     # 対象ファイルチェック
-    def allow_file_copy(self, sum_size, size_max, days_before, past_ng):
+    def allow_file_copy(self, sum_size, days_before, past_ng):
+        # 返り値のタプルをあらかじめ用意する
         ng_result = (sum_size, True)
-        ok_result = ((sum_size + self.file_size), False)
-        is_over_size = sum_size + self.file_size > size_max
+        ok_result = ((sum_size + self.file_size), False)                 
 
-        '''
-        【チェック内容】
-        1. 既にNGが出ていないこと
-        2. 有効なファイルか
-        3. 90日前までに作成されていること
-        4. ファイルサイズの累計が上限値を超えないこと
-        '''        
-        result = past_ng == False                        
-        result = result and self.is_file()   
-        result = result and self.is_target_day(days_before)
-        result = result and is_over_size == False                
+        # チェック内容をdictとして記述（ログ用）
+        checks = {}
+        checks['past_ng_check'] = (past_ng == False)
+        checks['valid_file_check'] = (self.is_file())
+        checks['days_range_check'] = (self.is_target_day(days_before))
+        checks['file_capacity_check'] = (self.is_over_size(sum_size) == False)
 
-        if result == False:
+        # 結果のみ取り出し
+        results = list(checks.values())
+
+        # すべてTrueでなければ対象外
+        if all(results) == False:
             return ng_result
         
         self.allow_copy =  True
@@ -83,14 +96,14 @@ class file_attr:
     def output_line(self):
         org_name = self.ignore_str(str(self.org_path.name), self.get_enc('w'))  
         dest_dir = self.ignore_str(str(self.dest_path.parent), self.get_enc('w'))  
-        create_str = self.create_time.strftime('%Y/%m/%d %H:%M:%S') 
+        create_str = self.get_createtime_str() 
         size_str = str(int(self.get_size_str(self.file_size, 'KB')))
 
         return [org_name, create_str, size_str, dest_dir, self.allow_copy]
 
     def __str__(self):
         org_name = self.org_path.name    
-        create_str = self.create_time.strftime('%Y/%m/%d %H:%M:%S') 
+        create_str = self.get_createtime_str()
         size_str = str(int(self.get_size_str(self.file_size, 'KB')))
 
         return "{},{},{},{},{}" \

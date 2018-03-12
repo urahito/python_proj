@@ -13,9 +13,12 @@ sys.path.append(os.getcwd())
 from file_attr import file_attr
 
 # ログ代わりの出力結果csvの出力
-def output_csv_log(files, input_dir, output_dir):
-    csv_name = 'result-{}.csv'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
-    log_dir = output_dir / 'log'
+def output_csv_log(files, input_dir, output_dir, csv_sub):
+    # ログファイル名
+    dt_now = datetime.datetime.now()
+    csv_name = 'result-{}.csv'.format(dt_now.strftime('%Y%m%d-%H%M%S'))
+    # ログフォルダ
+    log_dir = output_dir / csv_sub
     log_dir.mkdir(exist_ok=True)
 
     out_csv = log_dir / csv_name
@@ -56,11 +59,10 @@ def move_to_temp_dir(files, target_dir):
 # 古いファイルを特定する(1年以上前なら500MBまで)
 def get_old_pictures(files):
     size_sum = 0
-    size_max = file_attr.get_big_size(500, 'MB')
     past_ng = False
 
     for fi in tqdm.tqdm(files):
-        size_sum, past_ng = fi.allow_file_copy(size_sum, size_max, 90, past_ng)
+        size_sum, past_ng = fi.allow_file_copy(size_sum, 90, past_ng)
 
 # ファイルパターンを指定して、入力フォルダからのファイルを絞り込む
 def append_to_list(flist, input_dir, pattern_list):
@@ -74,9 +76,10 @@ def get_files(input_dir, output_dir):
     files = []
     file_list = []
     file_list = append_to_list(file_list, input_dir, ['*.gif', '*.PNG'])
+    size_max = file_attr.get_big_size(500, 'MB')
 
     for file_path in tqdm.tqdm(file_list):
-        files.append(file_attr(file_path, output_dir))
+        files.append(file_attr(file_path, output_dir, size_max))
 
     return sorted(files, key=attrgetter("create_time"))
 
@@ -119,7 +122,7 @@ def main():
         # zipファイルをDドライブの専用フォルダへ移動する
     finally:
         # ログファイルの出力
-        output_csv_log(files, input_dir, output_dir)
+        output_csv_log(files, input_dir, output_dir, 'log/csv_log')
     print('finished')
 
 if __name__ == '__main__':
