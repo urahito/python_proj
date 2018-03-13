@@ -6,7 +6,8 @@ from pathlib import Path
 import tqdm
 # 基本ライブラリ
 import sys, os
-import datetime
+from datetime import datetime as ddt
+from datetime import timedelta as dlt
 import csv
 # 外部クラス
 sys.path.append(os.getcwd())
@@ -15,7 +16,7 @@ from file_attr import file_attr
 # ログ代わりの出力結果csvの出力
 def output_csv_log(files, input_dir, output_dir, csv_sub):
     # ログファイル名
-    dt_now = datetime.datetime.now()
+    dt_now = ddt.now()
     csv_name = 'result-{}.csv'.format(dt_now.strftime('%Y%m%d-%H%M%S'))
     # ログフォルダ
     log_dir = output_dir / csv_sub

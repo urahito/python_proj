@@ -1,6 +1,8 @@
 # -- coding: utf-8 --
 from pathlib import Path
-import datetime, os
+from datetime import datetime as ddt
+from datetime import timedelta as dlt
+import os
 
 class file_attr:    
     @staticmethod
@@ -42,25 +44,25 @@ class file_attr:
         fsize = os.path.getsize(org_path)
 
         self.org_path = org_path
-        self.create_time = datetime.datetime.fromtimestamp(ctime)
+        self.create_time = ddt.fromtimestamp(ctime)
         self.file_size = fsize
         self.dest_org = Path(dest_dir)
         self.dest_path = self.dest_org / org_path.name
         self.allow_copy = False
         self.size_limit = size_limit
     
-    # 有効なファイルかどうか
-    def is_file(self):
-        # 存在するファイルであること
-        result = self.org_path.exists() and self.org_path.is_file()
-        # ファイルサイズがあること
-        result = result and (self.file_size > 0)
-        return result
+    # 有効なファイルかどうか(all(list(bool))で判定)
+    def is_file(self): 
+        results = []
+        results.append(self.org_path.exists())
+        results.append(self.org_path.is_file())
+        results.append(self.file_size > 0) 
+        return all(results)
     
     # 対象の日付か
     def is_target_day(self, days_before):
-        today = datetime.datetime.today()
-        th_date = today - datetime.timedelta(days=days_before)
+        today = ddt.today()
+        th_date = today - dlt(days=days_before)
         return self.create_time < th_date
     
     # ファイルサイズの上限チェック
