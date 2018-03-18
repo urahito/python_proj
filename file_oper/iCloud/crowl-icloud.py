@@ -16,8 +16,8 @@ from file_attr import file_attr
 # ログ代わりの出力結果csvの出力
 def output_csv_log(files, input_dir, output_dir, csv_sub):
     # ログファイル名
-    dt_now = ddt.now()
-    csv_name = 'result-{}.csv'.format(dt_now.strftime('%Y%m%d-%H%M%S'))
+    now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
+    csv_name = 'result-{}.csv'.format(now_str)
     # ログフォルダ
     log_dir = file_attr.make_parent_dir(output_dir, csv_sub)
 
