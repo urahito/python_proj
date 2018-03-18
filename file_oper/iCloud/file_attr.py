@@ -35,6 +35,15 @@ class file_attr:
     def get_createtime_str(self):
         return self.get_datetime_str(self.create_time, '%Y/%m/%d %H:%M:%S')
     
+    @staticmethod
+    def make_parent_dir(path_obj):
+        if not path_obj.exists() or path_obj.is_dir():
+            path_obj.mkdir(exist_ok=True)
+        elif path_obj.is_file():
+            path_obj = path_obj.parent()
+            path_obj.mkdir(exist_ok=True)
+        return path_obj
+
     def __init__(self, fpath, dest_dir, size_limit):
         org_path = Path(fpath)
         if (org_path.exists() == False):

@@ -19,8 +19,7 @@ def output_csv_log(files, input_dir, output_dir, csv_sub):
     dt_now = ddt.now()
     csv_name = 'result-{}.csv'.format(dt_now.strftime('%Y%m%d-%H%M%S'))
     # ログフォルダ
-    log_dir = output_dir / csv_sub
-    log_dir.mkdir(exist_ok=True)
+    log_dir = file_attr.make_parent_dir(output_dir / csv_sub)
 
     out_csv = log_dir / csv_name
     print('log file: ' + str(out_csv))
@@ -123,7 +122,8 @@ def main():
         # zipファイルをDドライブの専用フォルダへ移動する
     finally:
         # ログファイルの出力
-        output_csv_log(files, input_dir, output_dir, 'log/csv_log')
+        csv_sub = ini_data['log']['csv']
+        output_csv_log(files, input_dir, output_dir, csv_sub)
     print('finished')
 
 if __name__ == '__main__':
