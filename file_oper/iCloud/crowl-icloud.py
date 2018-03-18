@@ -19,7 +19,7 @@ def output_csv_log(files, input_dir, output_dir, csv_sub):
     dt_now = ddt.now()
     csv_name = 'result-{}.csv'.format(dt_now.strftime('%Y%m%d-%H%M%S'))
     # ログフォルダ
-    log_dir = file_attr.make_parent_dir(output_dir / csv_sub)
+    log_dir = file_attr.make_parent_dir(output_dir, csv_sub)
 
     out_csv = log_dir / csv_name
     print('log file: ' + str(out_csv))
