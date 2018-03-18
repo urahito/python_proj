@@ -41,7 +41,7 @@ class file_attr:
         results = {}
         results['parent_exist'] = path_obj.exists()
         results['sub_exist'] = path_sub.exists()        
-        results['is_file'] = path_sub.exists()
+        #results['is_file'] = path_sub.exists()
 
         if results['parent_exist']:            
             if not results['sub_exist']:
@@ -54,11 +54,11 @@ class file_attr:
 
     def __init__(self, fpath, dest_dir, size_limit):
         org_path = Path(fpath)
-        if (org_path.exists() == False):
+        if not org_path.exists():
             return
 
-        ctime = os.path.getmtime(org_path)
-        fsize = os.path.getsize(org_path)
+        ctime = org_path.stat().st_ctime
+        fsize = org_path.stat().st_size
 
         self.org_path = org_path
         self.create_time = ddt.fromtimestamp(ctime)
