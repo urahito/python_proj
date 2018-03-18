@@ -84,8 +84,12 @@ def get_files(input_dir, output_dir):
     return sorted(files, key=attrgetter("create_time"))
 
 # iniファイルから色々読み込む
-def get_ini_data(path_obj):
+def get_ini_data(path_obj, ini_name):
     ini_file = configparser.SafeConfigParser()
+
+    if not path_obj.exists():
+        print('ファイル名を{}にしてください', ini_name)
+        return None
 
     with path_obj.open('r', encoding='utf-8') as ini_file_obj:        
         ini_file.read_file(ini_file_obj)
@@ -94,8 +98,12 @@ def get_ini_data(path_obj):
 
 def main():
     # iniファイルの準備
-    ini_path = Path(__file__).parent / 'for-iCloud.ini'
-    ini_data = get_ini_data(ini_path)
+    ini_name = 'for-iCloud.ini'
+    ini_path = Path(__file__).parent / ini_name
+    ini_data = get_ini_data(ini_path, ini_name)
+
+    if ini_data == None:
+        return
 
     # 古いファイルを特定する(1年以上前なら1GBまで)
     input_dir = Path(ini_data['settings']['input'])
