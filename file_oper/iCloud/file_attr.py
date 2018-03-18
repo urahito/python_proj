@@ -47,9 +47,6 @@ class file_attr:
             if not results['sub_exist']:
                 path_sub.mkdir(exist_ok=True)
             path_obj = path_sub
-        elif results['is_file']:
-            path_obj = path_obj.parent()
-            path_obj.mkdir(exist_ok=True)
         else: 
             path_sub.mkdir(exist_ok=True)
             path_obj = path_sub
