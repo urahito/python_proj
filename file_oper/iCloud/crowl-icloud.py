@@ -4,6 +4,9 @@ import configparser
 from operator import attrgetter
 from pathlib import Path
 import tqdm
+from tempfile import TemporaryDirectory as Tempdir
+from Pillow import Image
+from zipfile import Zipfile
 # 基本ライブラリ
 import sys, os
 from datetime import datetime as ddt
@@ -12,6 +15,7 @@ import csv
 # 外部クラス
 sys.path.append(os.getcwd())
 from file_attr import file_attr
+from logger_setting import logger_setting as logger_s
 
 # ログ代わりの出力結果csvの出力
 def output_csv_log(files, input_dir, output_dir, csv_sub):
@@ -110,6 +114,9 @@ def main():
     output_dir = Path(ini_data['settings']['output'])
     print(input_dir)
 
+    # loggerの取得
+    logger = logger_s(ini_data)
+
     # ファイルリストの取得
     files = get_files(input_dir, output_dir)
     
@@ -118,7 +125,8 @@ def main():
     
     # ファイル移動関係は、エラー時もログファイルを出力する
     try:
-        print('')
+        now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
+
         # 特定したファイルを一時フォルダへ
 
         # GIFのコピーを作る（GIFアニメーション用）
