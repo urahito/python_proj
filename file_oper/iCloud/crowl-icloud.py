@@ -1,17 +1,22 @@
 # -- coding: utf-8 --
 # 操作系
 import configparser
+import tqdm
+import shutil
 from operator import attrgetter
 from pathlib import Path
-import tqdm
 from tempfile import TemporaryDirectory as Tempdir
-from Pillow import Image
-from zipfile import Zipfile
+from PIL import Image
+from zipfile import ZipFile
+# ログ系
+import logging
+logger_init = logging.getLogger(__name__)
+logger = None
 # 基本ライブラリ
 import sys, os
+import csv
 from datetime import datetime as ddt
 from datetime import timedelta as dlt
-import csv
 # 外部クラス
 sys.path.append(os.getcwd())
 from file_attr import file_attr
@@ -51,17 +56,43 @@ def comp_to_zip(target_dir, dest_path):
 def make_gif_animation(target_dir, dest_path):
     print('')
 
-# GIFのコピーを作る（GIFアニメーション用）
-def get_gif_copy(files):
-    # GIF用の一時フォルダも必要
-    print('')
+# GIFのコピーを作る（GIFアニメーション用） 
+def save_to_gif(backup_dir, gif_dir): 
+    print('save pngs to gif') 
+    png_files = list(Path(backup_dir).glob('*.PNG'))
+    org_gifs = list(Path(backup_dir).glob('*.gif'))
+    out_gifs = []
+
+    for fi in tqdm.tqdm(png_files):
+        img = Image.open(fi)
+        gif_path = fi.with_suffix('.gif')
+        img_resize = image.resize((int(img.width/2), int(img.height/2)))
+        img_resize.save(gif_path, 'gif')
+        out_gifs.append(gif_path)
+    
+    for fi in tqdm.tqdm(org_gifs):
+        shutil.move(fi, str(gif_dir / Path(fi).name))
+
+    return out_gifs, png_files
 
 # 特定したファイルを一時フォルダへ
-def move_to_temp_dir(files, target_dir):
-    print('')
+def move_files(files, dest_dir): 
+    print('一時ファイルへの移動...')
+    Path(dest_dir).mkdir(exist_ok=True)
+
+    for fi in tqdm.tqdm(files):
+        # 存在しないファイルは警告して飛ばす
+        if not Path(fi.org_path).exists():
+            logger.logger.warn("not exist file! {}".format(fi))
+            continue
+        # 送信先を指定してコピー
+        dest_path = Path(dest_dir) / fi.org_path.name
+        shutil.copy2(fi.org_path, dest_path)
+        # shutil.move(fi.org_path, temp_dir)
 
 # 古いファイルを特定する(1年以上前なら500MBまで)
 def get_old_pictures(files):
+    print('ファイルの特定の開始...')
     size_sum = 0
     past_ng = False
 
@@ -112,10 +143,12 @@ def main():
     # 古いファイルを特定する(1年以上前なら1GBまで)
     input_dir = Path(ini_data['settings']['input'])
     output_dir = Path(ini_data['settings']['output'])
+    backup_dir = file_attr.make_parent_dir(output_dir / ini_data['picture']['backup'])
+    gif_dir = file_attr.make_parent_dir(output_dir / ini_data['picture']['gif'])
     print(input_dir)
 
     # loggerの取得
-    logger = logger_s(ini_data)
+    logger = logger_s(ini_data, logger_init)
 
     # ファイルリストの取得
     files = get_files(input_dir, output_dir)
@@ -126,16 +159,23 @@ def main():
     # ファイル移動関係は、エラー時もログファイルを出力する
     try:
         now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
+        print('files(before): {}'.format(len(files)))
+        files = list(filter(lambda x: x.allow_copy, files))
+        print('files(after): {}'.format(len(files)))
 
         # 特定したファイルを一時フォルダへ
+        move_files(files, backup_dir)
 
         # GIFのコピーを作る（GIFアニメーション用）
+        out_gifs, png_files = save_to_gif(backup_dir, gif_dir)
 
         # GIFアニメーションを作成する
 
         # 一時フォルダをzip化する
 
         # zipファイルをDドライブの専用フォルダへ移動する
+    except Exception as ex:
+        logger.logger.error(ex)
     finally:
         # ログファイルの出力
         csv_sub = ini_data['log']['csv']
