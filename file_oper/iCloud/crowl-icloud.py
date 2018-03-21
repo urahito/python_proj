@@ -122,13 +122,13 @@ def save_to_gif(backup_dir, gif_dir, thumb_max):
     return out_gifs, png_files
 
 # 特定したファイルを一時フォルダへ
-def move_files(files, dest_dir): 
+def move_files(files, dest_dir, logger): 
     print('一時ファイルへの移動...')
 
     for fi in tqdm.tqdm(files):
         # 存在しないファイルは警告して飛ばす
         if not Path(fi.org_path).exists():
-            logger.logger.warn("not exist file! {}".format(fi))
+            logger.warn("not exist file! {}".format(fi))
             continue
         # 送信先を指定してコピー
         dest_path = Path(dest_dir) / fi.org_path.name
@@ -246,7 +246,7 @@ def main():
         rec_time(time_dic, '転送準備', time_start, logger)
 
         # 特定したファイルをファイル転送
-        move_files(files, backup_dir)
+        move_files(files, backup_dir, logger)
         rec_time(time_dic, 'ファイル転送', time_start, logger)
 
         # GIFのコピーを作る（GIFアニメーション用）
