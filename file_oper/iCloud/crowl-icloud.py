@@ -53,29 +53,39 @@ def comp_to_zip(target_dir, dest_path):
     print('')
 
 # GIFアニメーションを作成する
-def make_gif_animation(target_dir, dest_path):
-    print('')
+def make_gif_animation(out_gifs, dest_dir, now_str, size_w, size_h):
+    out_path = Path(dest_dir) / 'thumb-{}.gif'.format(now_str)
+    i = 0
+
+    print('サムネイルGIFアニメの保存')
+    try:
+        out = Image.new('RGB', (size_w, size_h), (255, 255, 255))
+
+        img_flms = []
+        for fi in tqdm.tqdm(out_gifs):
+            try:    
+                with Image.open(fi) as im:
+                    while True:                                        
+                        new_frame = Image.new('RGBA', im.size)
+                        new_frame.paste(im, (0, 0), im.convert('RGBA'))
+                        img_flms.append(new_frame)
+                        im.seek(im.tell() + 1)
+            except EOFError:
+                pass
+            try:
+                os.remove(fi)
+            except Exception:
+                pass
+        
+        out.save(out_path, save_all=True, append_images=img_flms, optimize=False, duration=100, loop=0)
+    except:
+        raise
 
 # GIFのコピーを作る（GIFアニメーション用） 
 def save_to_gif(backup_dir, gif_dir): 
     png_files = list(Path(backup_dir).glob('*.PNG'))
     org_gifs = list(Path(backup_dir).glob('*.gif'))
     out_gifs = []
-
-    print('PNGファイルをリサイズしてgifファイルへ保存') 
-    for fi in tqdm.tqdm(png_files):        
-        gif_path = fi.with_suffix('.gif')
-
-        try:
-            with Image.open(fi) as img:
-                # ファイルのリサイズ
-                img_resize = img.resize((int(img.width/2), int(img.height/2)))
-            # 保存
-            img_resize.save(gif_path, 'gif')
-        except:
-            raise
-        # GIFアニメーション用にリスト化
-        out_gifs.append(gif_path)
     
     print('既にあったgifファイルは先に専用フォルダへ')
     for fi in tqdm.tqdm(org_gifs):
@@ -84,7 +94,26 @@ def save_to_gif(backup_dir, gif_dir):
         except:
             raise
 
-    return out_gifs, png_files
+    print('PNGファイルをリサイズしてgifファイルへ保存') 
+    for fi in tqdm.tqdm(png_files):        
+        gif_path = fi.with_suffix('.gif')
+        size_w = 0
+        size_h = 0
+
+        try:
+            with Image.open(fi) as img:
+                # ファイルのリサイズ
+                img_resize = img.resize((int(img.width/2), int(img.height/2)))
+                size_w = int(img.width/2)
+                size_h = int(img.height/2)
+            # 保存
+            img_resize.save(gif_path, 'gif')
+        except:
+            raise
+        # GIFアニメーション用にリスト化
+        out_gifs.append(gif_path)
+
+    return out_gifs, png_files, size_w, size_h
 
 # 特定したファイルを一時フォルダへ
 def move_files(files, dest_dir): 
@@ -179,15 +208,17 @@ def main():
         move_files(files, backup_dir)
 
         # GIFのコピーを作る（GIFアニメーション用）
-        out_gifs, png_files = save_to_gif(backup_dir, gif_dir)
+        out_gifs, png_files, size_w, size_h = save_to_gif(backup_dir, gif_dir)
 
         # GIFアニメーションを作成する
+        make_gif_animation(out_gifs, output_dir, now_str, size_w, size_h)
 
         # 一時フォルダをzip化する
 
         # zipファイルをDドライブの専用フォルダへ移動する
     except Exception as ex:
         logger.logger.error(ex)
+        print(ex)
     finally:
         # ログファイルの出力
         csv_sub = ini_data['log']['csv']
