@@ -53,7 +53,7 @@ def comp_to_zip(target_dir, dest_path):
     print('')
 
 # GIFアニメーションを作成する
-def make_gif_animation(out_gifs, dest_dir, now_str, size_w, size_h):
+def make_gif_animation(out_gifs, dest_dir, now_str, size_w, size_h, dul_ms=100):
     out_path = Path(dest_dir) / 'thumb-{}.gif'.format(now_str)
     i = 0
 
@@ -77,7 +77,8 @@ def make_gif_animation(out_gifs, dest_dir, now_str, size_w, size_h):
             except Exception:
                 pass
         
-        out.save(out_path, save_all=True, append_images=img_flms, optimize=False, duration=100, loop=0)
+        print('サムネイルGIFアニメの保存-saving...')
+        out.save(out_path, save_all=True, append_images=img_flms[1:], optimize=False, duration=dul_ms, loop=0)
     except:
         raise
 
@@ -86,6 +87,8 @@ def save_to_gif(backup_dir, gif_dir):
     png_files = list(Path(backup_dir).glob('*.PNG'))
     org_gifs = list(Path(backup_dir).glob('*.gif'))
     out_gifs = []
+    size_w = 0
+    size_h = 0
     
     print('既にあったgifファイルは先に専用フォルダへ')
     for fi in tqdm.tqdm(org_gifs):
@@ -97,15 +100,13 @@ def save_to_gif(backup_dir, gif_dir):
     print('PNGファイルをリサイズしてgifファイルへ保存') 
     for fi in tqdm.tqdm(png_files):        
         gif_path = fi.with_suffix('.gif')
-        size_w = 0
-        size_h = 0
 
         try:
             with Image.open(fi) as img:
                 # ファイルのリサイズ
                 img_resize = img.resize((int(img.width/2), int(img.height/2)))
-                size_w = int(img.width/2)
-                size_h = int(img.height/2)
+                size_w = int(img.width/2) if int(img.width/2) > size_w else size_w
+                size_h = int(img.height/2) if int(img.height/2) > size_h else size_h
             # 保存
             img_resize.save(gif_path, 'gif')
         except:
@@ -113,7 +114,8 @@ def save_to_gif(backup_dir, gif_dir):
         # GIFアニメーション用にリスト化
         out_gifs.append(gif_path)
 
-    return out_gifs, png_files, size_w, size_h
+    size_max = size_w if size_w > size_h else size_h
+    return out_gifs, png_files, size_max
 
 # 特定したファイルを一時フォルダへ
 def move_files(files, dest_dir): 
@@ -154,6 +156,7 @@ def get_files(input_dir, output_dir):
     file_list = append_to_list(file_list, input_dir, ['*.gif', '*.PNG'])
     size_max = file_attr.get_big_size(500, 'MB')
 
+    print('ファイル情報の取得')
     for file_path in tqdm.tqdm(file_list):
         files.append(file_attr(file_path, output_dir, size_max))
 
@@ -161,16 +164,16 @@ def get_files(input_dir, output_dir):
 
 # iniファイルから色々読み込む
 def get_ini_data(path_obj, ini_name):
-    ini_file = configparser.SafeConfigParser()
+    ini_data = configparser.SafeConfigParser()
 
     if not path_obj.exists():
         print('ファイル名を{}にしてください', ini_name)
         return None
 
     with path_obj.open('r', encoding='utf-8') as ini_file_obj:        
-        ini_file.read_file(ini_file_obj)
+        ini_data.read_file(ini_file_obj)
 
-    return ini_file
+    return ini_data
 
 def main():
     # iniファイルの準備
@@ -208,10 +211,11 @@ def main():
         move_files(files, backup_dir)
 
         # GIFのコピーを作る（GIFアニメーション用）
-        out_gifs, png_files, size_w, size_h = save_to_gif(backup_dir, gif_dir)
+        out_gifs, png_files, size_max = save_to_gif(backup_dir, gif_dir)
 
         # GIFアニメーションを作成する
-        make_gif_animation(out_gifs, output_dir, now_str, size_w, size_h)
+        dul_ms = int(ini_data['picture']['dulation'])
+        make_gif_animation(out_gifs, output_dir, now_str, size_max, size_max, dul_ms)
 
         # 一時フォルダをzip化する
 
