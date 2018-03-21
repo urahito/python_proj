@@ -58,18 +58,23 @@ def make_gif_animation(target_dir, dest_path):
 
 # GIFのコピーを作る（GIFアニメーション用） 
 def save_to_gif(backup_dir, gif_dir): 
-    print('save pngs to gif') 
     png_files = list(Path(backup_dir).glob('*.PNG'))
     org_gifs = list(Path(backup_dir).glob('*.gif'))
     out_gifs = []
 
+    print('PNGファイルをリサイズしてgifファイルへ保存') 
     for fi in tqdm.tqdm(png_files):
-        img = Image.open(fi)
+        with Image.open(fi) as img:
+            # ファイルのリサイズ
+            img_resize = img.resize((int(img.width/2), int(img.height/2)))
+
+        # 保存
         gif_path = fi.with_suffix('.gif')
-        img_resize = image.resize((int(img.width/2), int(img.height/2)))
         img_resize.save(gif_path, 'gif')
+        # GIFアニメーション用にリスト化
         out_gifs.append(gif_path)
     
+    print('既にあったgifファイルは先に専用フォルダへ')
     for fi in tqdm.tqdm(org_gifs):
         shutil.move(fi, str(gif_dir / Path(fi).name))
 
@@ -78,7 +83,6 @@ def save_to_gif(backup_dir, gif_dir):
 # 特定したファイルを一時フォルダへ
 def move_files(files, dest_dir): 
     print('一時ファイルへの移動...')
-    Path(dest_dir).mkdir(exist_ok=True)
 
     for fi in tqdm.tqdm(files):
         # 存在しないファイルは警告して飛ばす
@@ -88,7 +92,6 @@ def move_files(files, dest_dir):
         # 送信先を指定してコピー
         dest_path = Path(dest_dir) / fi.org_path.name
         shutil.copy2(fi.org_path, dest_path)
-        # shutil.move(fi.org_path, temp_dir)
 
 # 古いファイルを特定する(1年以上前なら500MBまで)
 def get_old_pictures(files):
