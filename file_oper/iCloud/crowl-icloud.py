@@ -6,7 +6,7 @@ import shutil
 from operator import attrgetter
 from pathlib import Path
 from PIL import Image
-from zipfile import ZipFile
+import zipfile
 # ログ系
 import logging
 logger = None
@@ -47,13 +47,26 @@ def output_csv_log(files, output_dir, csv_sub):
         for fi in tqdm.tqdm(files):
             csv_obj.writerow(fi.output_line())
 
-# zipファイルをDドライブの専用フォルダへ移動する
-def move_zip(zip_path, dest_dir):
-    print('')
-
 # 一時フォルダをzip化する
-def comp_to_zip(target_dir, dest_path):
-    print('')
+def comp_to_zip(png_files, out_gifs, dest_dir, now_str):
+    out_path = str(Path(dest_dir) / 'PNGs-{}.zip'.format(now_str))
+    print('zipファイルへの圧縮...')
+    with zipfile.ZipFile(out_path, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_obj:
+        for png_file in tqdm.tqdm(png_files):
+            png_name = str(png_file.name).replace('（編集済み）', '_edit')
+            png_name = file_attr.ignore_str(png_name, file_attr.get_enc('w'))
+            zip_obj.write(str(png_file), png_name, zipfile.ZIP_DEFLATED)
+    
+    
+    print('圧縮済みのPNG/GIFファイルを削除する')    
+    try:
+        for fi in tqdm.tqdm(png_files):
+            os.remove(fi)
+        for fi in tqdm.tqdm(out_gifs):
+            os.remove(fi)
+    except:
+        raise
+    return out_path
 
 # GIFアニメーションを作成する
 def make_gif_animation(out_gifs, dest_dir, now_str, thumb_max, dul_ms=100):
@@ -235,6 +248,7 @@ def main():
     rec_time(time_dic, 'ファイルの仕分け', time_start, logger)
     
     # ファイル移動関係は、エラー時もログファイルを出力する
+    zip_path = ''
     try:        
         # ファイルの絞り込み
         info_dic['全ファイル数'] = '{}(files)'.format(len(files))
@@ -255,23 +269,29 @@ def main():
         make_gif_animation(out_gifs, output_dir, now_str, thumb_max, dul_ms)
         rec_time(time_dic, 'GIFアニメーションの作成', time_start, logger)
 
-        # 一時フォルダをzip化する
-
-        # zipファイルをDドライブの専用フォルダへ移動する
+        # PNGファイルをzip化する
+        zip_path = comp_to_zip(png_files, out_gifs, output_dir, now_str)
+        rec_time(time_dic, 'PNGファイルをzip化', time_start, logger)
     except Exception as ex:
         logger.logger.error(ex)
         print(ex)
     finally:
         time_dic['処理開始'] = 0
 
-        # ログファイルの出力
-        csv_sub = ini_data['log']['csv']
+        # 入力ファイル情報
         file_latest = max([ti.create_time for ti in files])
         file_sum = int(sum([si.file_size for si in files]))
         info_dic['対象ファイルの最終日時'] =  file_attr.get_datetime_str(file_latest, '%Y/%m/%d %H:%M:%S')
         info_dic['対象ファイルの総サイズ'] =  '{:.1f}(MB)'.format(file_attr.get_size_str(file_sum, 'MB'))
+        # 主力ファイル情報
+        info_dic['zipファイルのパス'] =  '{}'.format(zip_path)
+        zip_size = file_attr.get_size_str(Path(zip_path).stat().st_size, 'MB')
+        info_dic['zipファイルのファイルサイズ'] =  '{:.1f}(MB)'.format(zip_size)
 
     try:
+        # ログファイルの出力
+        csv_sub = ini_data['log']['csv']
+
         output_csv_log(files, output_dir, csv_sub)
         output_logger(logger, info_dic, time_dic)
     except Exception as ex:
