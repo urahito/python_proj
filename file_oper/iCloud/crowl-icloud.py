@@ -10,7 +10,6 @@ from PIL import Image
 from zipfile import ZipFile
 # ログ系
 import logging
-logger_init = logging.getLogger(__name__)
 logger = None
 # 基本ライブラリ
 import sys, os
@@ -24,17 +23,17 @@ from file_attr import file_attr
 from logger_setting import logger_setting as logger_s
 
 # info_dicに貯めた情報を出力する
-def output_csv_info(csv_obj, info_dic, time_dic):
+def output_logger(logger, info_dic, time_dic):
     for key in info_dic.keys():
-        csv_obj.writerow([key, info_dic[key]])
+        logger.info('{}: {}'.format(key, info_dic[key]))
     prev_time = 0
     for key in time_dic.keys():
         time_dlt = dlt(seconds=time_dic[key] - prev_time)
-        csv_obj.writerow([key, '{:.1f}'.format(time_dlt.total_seconds()), '(s)'])
+        logger.info('{}: {:.1f}(s)'.format(key, time_dlt.total_seconds()))
         prev_time = time_dic[key]
 
 # ログ代わりの出力結果csvの出力
-def output_csv_log(files, output_dir, csv_sub, info_dic, time_dic):
+def output_csv_log(files, output_dir, csv_sub):
     # ログファイル名
     now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
     csv_name = 'result-{}.csv'.format(now_str)
@@ -46,9 +45,6 @@ def output_csv_log(files, output_dir, csv_sub, info_dic, time_dic):
 
     with out_csv.open('w', encoding=file_attr.get_enc('w'), newline='') as out_file_obj:
         csv_obj = csv.writer(out_file_obj, dialect='excel')
-        output_csv_info(csv_obj, info_dic, time_dic)
-
-        csv_obj.writerow([''])
         csv_obj.writerow(['ファイル名', '作成日時', '(KB)', '転送先フォルダ', '転送対象'])
 
         for fi in tqdm.tqdm(files):
@@ -74,12 +70,12 @@ def make_gif_animation(out_gifs, dest_dir, now_str, thumb_max, dul_ms=100):
         img_flms = []
         for fi in tqdm.tqdm(out_gifs):
             try:    
-                with Image.open(fi) as im:
-                    while True:                                        
-                        new_frame = Image.new('RGBA', im.size)
-                        new_frame.paste(im, (0, 0), im.convert('RGBA'))
-                        img_flms.append(new_frame)
-                        im.seek(im.tell() + 1)
+                im = Image.open(fi)
+                while True:                                        
+                    new_frame = Image.new('RGBA', im.size)
+                    new_frame.paste(im, (0, 0), im.convert('RGBA'))
+                    img_flms.append(new_frame)
+                    im.seek(im.tell() + 1)
             except EOFError:
                 pass
             try:
@@ -111,11 +107,11 @@ def save_to_gif(backup_dir, gif_dir, thumb_max):
         gif_path = fi.with_suffix('.gif')
 
         try:
-            with Image.open(fi) as img:
-                # ファイルのリサイズ
-                wide_size = max([img.width, img.height])
-                wide_rate = max([wide_size / thumb_max, 1])
-                img_resize = img.resize((int(img.width / wide_rate), int(img.height/wide_rate)))
+            img = Image.open(fi)
+            # ファイルのリサイズ
+            wide_size = max([img.width, img.height])
+            wide_rate = max([wide_size / thumb_max, 1])
+            img_resize = img.resize((int(img.width / wide_rate), int(img.height/wide_rate)))
             # 保存
             img_resize.save(gif_path, 'gif')
         except:
@@ -181,9 +177,10 @@ def get_dirs(ini_data):
     gif_dir = file_attr.make_parent_dir(output_dir / ini_data['picture']['gif']) 
     return input_dir, output_dir, backup_dir, gif_dir
 
-# 時間差分を取る
-def get_time(value):
-    return time.time() - value
+# 記録を取る
+def rec_time(dic, key, start, logger):
+    dic[key] = time.time() - start
+    logger.info('{} 完了'.format(key))
 
 # iniファイルから色々読み込む
 def get_ini_data(path_obj, ini_name):
@@ -204,6 +201,7 @@ def main():
     time_dic = {}
     time_dic['処理開始'] = time.time()
     time_start = time_dic['処理開始']
+    now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
 
     # iniファイルの準備
     ini_name = 'for-iCloud.ini'
@@ -212,6 +210,10 @@ def main():
 
     if ini_data == None:
         return
+
+    # loggerの取得
+    logger = logger_s(ini_data, __name__, now_str)
+    logger.info('初期設定 開始')
 
     # ディレクトリの取得
     input_dir, output_dir, backup_dir, gif_dir = get_dirs(ini_data)
@@ -225,39 +227,36 @@ def main():
 
     # サムネイルの幅を決める
     thumb_max = int(ini_data['picture']['thumb_px'])
-
-    # loggerの取得
-    logger = logger_s(ini_data, logger_init)
-    time_dic['初期設定'] = get_time(time_start)
+    rec_time(time_dic, '初期設定', time_start, logger)
 
     # ファイルリストの取得
     files = get_files(input_dir, output_dir)
-    time_dic['ファイルリストの取得'] = get_time(time_start)
+    rec_time(time_dic, 'ファイルリストの取得', time_start, logger)
     
     # ファイルの仕分け
     get_old_pictures(files, size_max)
-    time_dic['ファイルの仕分け'] = get_time(time_start)
+    rec_time(time_dic, 'ファイルの仕分け', time_start, logger)
     
     # ファイル移動関係は、エラー時もログファイルを出力する
-    try:
-        now_str = file_attr.get_datetime_str(ddt.now(), '%Y%m%d-%H%M%S')
+    try:        
+        # ファイルの絞り込み
         info_dic['全ファイル数'] = '{}(files)'.format(len(files))
         files = list(filter(lambda x: x.allow_copy, files))
         info_dic['対象ファイル数'] = '{}(files)'.format(len(files))
-        time_dic['転送準備'] = get_time(time_start)
+        rec_time(time_dic, '転送準備', time_start, logger)
 
         # 特定したファイルをファイル転送
         move_files(files, backup_dir)
-        time_dic['ファイル転送'] = get_time(time_start) 
+        rec_time(time_dic, 'ファイル転送', time_start, logger)
 
         # GIFのコピーを作る（GIFアニメーション用）
         out_gifs, png_files = save_to_gif(backup_dir, gif_dir, thumb_max)
-        time_dic['GIFコピー'] = get_time(time_start)  
+        rec_time(time_dic, 'GIFコピー', time_start, logger)
 
         # GIFアニメーションを作成する
         dul_ms = int(ini_data['picture']['dulation_ms'])
         make_gif_animation(out_gifs, output_dir, now_str, thumb_max, dul_ms)
-        time_dic['GIFアニメーションの作成'] = get_time(time_start)  
+        rec_time(time_dic, 'GIFアニメーションの作成', time_start, logger)
 
         # 一時フォルダをzip化する
 
@@ -271,8 +270,15 @@ def main():
         # ログファイルの出力
         csv_sub = ini_data['log']['csv']
         file_latest = max([ti.create_time for ti in files])
+        file_sum = int(sum([si.file_size for si in files]))
         info_dic['対象ファイルの最終日時'] =  file_attr.get_datetime_str(file_latest, '%Y/%m/%d %H:%M:%S')
-        output_csv_log(files, output_dir, csv_sub, info_dic, time_dic)
+        info_dic['対象ファイルの総サイズ'] =  '{:.1f}(MB)'.format(file_attr.get_size_str(file_sum, 'MB'))
+
+    try:
+        output_csv_log(files, output_dir, csv_sub)
+        output_logger(logger, info_dic, time_dic)
+    except Exception as ex:
+        logger.error('!!ログ出力エラー', ex)
     print('finished')
 
 if __name__ == '__main__':
