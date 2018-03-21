@@ -52,7 +52,7 @@ class file_attr:
             path_obj = path_sub
         return path_obj
 
-    def __init__(self, fpath, dest_dir, size_limit):
+    def __init__(self, fpath, dest_dir):
         org_path = Path(fpath)
         if not org_path.exists():
             return
@@ -66,7 +66,6 @@ class file_attr:
         self.dest_org = Path(dest_dir)
         self.dest_path = self.dest_org / org_path.name
         self.allow_copy = False
-        self.size_limit = size_limit
     
     # 有効なファイルかどうか(all(list(bool))で判定)
     def is_file(self): 
@@ -82,32 +81,23 @@ class file_attr:
         th_date = today - dlt(days=days_before)
         return self.create_time < th_date
     
-    # ファイルサイズの上限チェック
-    def is_over_size(self, sum_size):
-        return sum_size + self.file_size > self.size_limit
-    
     # 対象ファイルチェック
-    def allow_file_copy(self, sum_size, days_before, past_ng):
-        # 返り値のタプルをあらかじめ用意する
-        ng_result = (sum_size, True)
-        ok_result = ((sum_size + self.file_size), False)                 
-
+    def allow_file_copy(self, days_before, past_ng):    
         # チェック内容をdictとして記述（ログ用）
         checks = {}
-        checks['past_ng_check'] = (past_ng == False)
+        checks['past_ng_check'] = (not past_ng)
         checks['valid_file_check'] = (self.is_file())
         checks['days_range_check'] = (self.is_target_day(days_before))
-        checks['file_capacity_check'] = (self.is_over_size(sum_size) == False)
 
         # 結果のみ取り出し
         results = list(checks.values())
 
         # すべてTrueでなければ対象外
         if all(results) == False:
-            return ng_result
+            return self.file_size
         
         self.allow_copy =  True
-        return ok_result
+        return self.file_size
     
     def set_sub_dir(self, sub_dir):
         self.dest_path = self.dest_org / sub_dir / self.org_path.name
