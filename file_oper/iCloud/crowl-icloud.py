@@ -63,20 +63,26 @@ def save_to_gif(backup_dir, gif_dir):
     out_gifs = []
 
     print('PNGファイルをリサイズしてgifファイルへ保存') 
-    for fi in tqdm.tqdm(png_files):
-        with Image.open(fi) as img:
-            # ファイルのリサイズ
-            img_resize = img.resize((int(img.width/2), int(img.height/2)))
-
-        # 保存
+    for fi in tqdm.tqdm(png_files):        
         gif_path = fi.with_suffix('.gif')
-        img_resize.save(gif_path, 'gif')
+
+        try:
+            with Image.open(fi) as img:
+                # ファイルのリサイズ
+                img_resize = img.resize((int(img.width/2), int(img.height/2)))
+            # 保存
+            img_resize.save(gif_path, 'gif')
+        except:
+            raise
         # GIFアニメーション用にリスト化
         out_gifs.append(gif_path)
     
     print('既にあったgifファイルは先に専用フォルダへ')
     for fi in tqdm.tqdm(org_gifs):
-        shutil.move(fi, str(gif_dir / Path(fi).name))
+        try:
+            shutil.move(fi, str(gif_dir / Path(fi).name))
+        except:
+            raise
 
     return out_gifs, png_files
 
@@ -91,7 +97,10 @@ def move_files(files, dest_dir):
             continue
         # 送信先を指定してコピー
         dest_path = Path(dest_dir) / fi.org_path.name
-        shutil.copy2(fi.org_path, dest_path)
+        try:
+            shutil.copy2(fi.org_path, dest_path)
+        except:
+            raise
 
 # 古いファイルを特定する(1年以上前なら500MBまで)
 def get_old_pictures(files):
