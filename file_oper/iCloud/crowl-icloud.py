@@ -5,16 +5,13 @@ import tqdm
 import shutil
 from operator import attrgetter
 from pathlib import Path
-from tempfile import TemporaryDirectory as Tempdir
 from PIL import Image
 from zipfile import ZipFile
 # ログ系
 import logging
 logger = None
 # 基本ライブラリ
-import sys, os
-import csv
-import time
+import sys, os, csv, time
 from datetime import datetime as ddt
 from datetime import timedelta as dlt
 # 外部クラス
