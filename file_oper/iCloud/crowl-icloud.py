@@ -71,7 +71,6 @@ def comp_to_zip(png_files, out_gifs, dest_dir, now_str):
 # GIFアニメーションを作成する
 def make_gif_animation(out_gifs, dest_dir, now_str, thumb_max, dul_ms=100):
     out_path = Path(dest_dir) / 'thumb-{}.gif'.format(now_str)
-    i = 0
 
     print('サムネイルGIFアニメの保存')
     try:
@@ -86,6 +85,8 @@ def make_gif_animation(out_gifs, dest_dir, now_str, thumb_max, dul_ms=100):
                     new_frame.paste(im, (0, 0), im.convert('RGBA'))
                     img_flms.append(new_frame)
                     im.seek(im.tell() + 1)
+                    del new_frame
+                del im
             except EOFError:
                 pass
             try:
