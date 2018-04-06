@@ -252,7 +252,8 @@ def main():
     try:        
         # ファイルの絞り込み
         info_dic['全ファイル数'] = '{}(files)'.format(len(files))
-        files = list(filter(lambda x: x.allow_copy, files))
+        # files = list(filter(lambda x: x.allow_copy, files))
+        files = [file_obj for file_obj in files if file_obj.allow_copy == True]
         info_dic['対象ファイル数'] = '{}(files)'.format(len(files))
         rec_time(time_dic, '転送準備', time_start, logger)
 
