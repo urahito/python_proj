@@ -60,9 +60,8 @@ def comp_to_zip(png_files, out_gifs, dest_dir, now_str):
     
     print('圧縮済みのPNG/GIFファイルを削除する')    
     try:
-        for fi in tqdm.tqdm(png_files):
-            os.remove(fi)
-        for fi in tqdm.tqdm(out_gifs):
+        remove_files = list(zip(png_files, out_gifs))
+        for fi in tqdm.tqdm(remove_files):
             os.remove(fi)
     except:
         raise
@@ -164,21 +163,19 @@ def get_old_pictures(files, size_max):
             size_sum = size_sum + file_size
 
 # ファイルパターンを指定して、入力フォルダからのファイルを絞り込む
-def append_to_list(flist, input_dir, pattern_list):
+def append_to_list(input_dir, pattern_list):
+    all_list = []
     for pattern in pattern_list:
-        for path in list(input_dir.glob(pattern)):
-            flist.append(path)
-    return flist
+        pattern_files = [path for path in input_dir.glob(pattern)]
+        all_list = list(zip(all_list, pattern_files))
+    return all_list
 
 # ファイル情報の取得
 def get_files(input_dir, output_dir):
-    files = []
-    file_list = []
-    file_list = append_to_list(file_list, input_dir, ['*.gif', '*.PNG'])
+    file_list = append_to_list(input_dir, ['*.gif', '*.PNG'])
 
     print('ファイル情報の取得')
-    for file_path in tqdm.tqdm(file_list):
-        files.append(file_attr(file_path, output_dir))
+    files = [file_attr(file_path, output_dir) for file_path in file_list]
 
     return sorted(files, key=attrgetter("create_time"))
 
