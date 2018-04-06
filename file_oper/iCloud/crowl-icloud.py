@@ -125,6 +125,8 @@ def save_to_gif(backup_dir, gif_dir, thumb_max):
             img_resize = img.resize((int(img.width / wide_rate), int(img.height/wide_rate)))
             # 保存
             img_resize.save(gif_path, 'gif')
+            del img
+            del img_resize
         except:
             raise
         # GIFアニメーション用にリスト化
